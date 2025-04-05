@@ -1,10 +1,3 @@
-/*
- * LED_TEST.c
- *
- * Created: 3/30/2025 12:32:04 AM
- * Author : Ahmed Azzam
- */ 
-
 #include <avr/io.h>
 
 #include "../../../interfaceing_with_ATmega32_workspace/LIB/BIT_MATH.h"
@@ -36,17 +29,27 @@ int main(void)
 	/* Turn on the led by writing 1 on the led to output voltage */
     while (1) 
     {
-		for (u8 i = 0; i < 10; i++)
+		/* Set all states off if input button is not clicked (0) and on if input button is clicked ... PORTA 1 to fire up internal pull up resistor */
+		PORTA = 0b11111110;
+		
+		if ((PINA & 0b00000010) == 0)
 		{
-			/* ON states */
-			PORTA = 0b00000001;
-			PORTD = segment[i];
-			_delay_ms(500);
-			
-			/* OFF states */
-			PORTA = 0b00000000;
-			PORTD = 0b00000000;
-			_delay_ms(500);
+			_delay_ms(50); // debounce
+			if ((PINA & (1 << PA1)) == 0){
+				for (u8 i = 0; i < 10; i++)
+				{
+					/* ON states */
+					PORTA = 0b11111111;
+					PORTD = segment[i];
+					_delay_ms(500);
+					
+					/* OFF states */
+					CLR_BIT(PORTA, PA0);
+					SET_BIT(PORTA, PA1);
+					PORTD = 0b00000000;
+					_delay_ms(500);
+				}
+			}
 		}
 	}					
 }

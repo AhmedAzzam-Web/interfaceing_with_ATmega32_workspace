@@ -3,29 +3,29 @@ LED_TEST.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         000000f6  00000000  00000000  00000074  2**1
+  0 .text         00000116  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .data         0000000a  00800060  000000f6  0000016a  2**0
+  1 .data         0000000a  00800060  00000116  0000018a  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .comment      00000030  00000000  00000000  00000174  2**0
+  2 .comment      00000030  00000000  00000000  00000194  2**0
                   CONTENTS, READONLY
-  3 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  000001a4  2**2
+  3 .note.gnu.avr.deviceinfo 0000003c  00000000  00000000  000001c4  2**2
                   CONTENTS, READONLY
-  4 .debug_aranges 00000020  00000000  00000000  000001e0  2**0
+  4 .debug_aranges 00000020  00000000  00000000  00000200  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   00000687  00000000  00000000  00000200  2**0
+  5 .debug_info   000006bc  00000000  00000000  00000220  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 000005af  00000000  00000000  00000887  2**0
+  6 .debug_abbrev 000005b8  00000000  00000000  000008dc  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   000002c8  00000000  00000000  00000e36  2**0
+  7 .debug_line   000002f4  00000000  00000000  00000e94  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000034  00000000  00000000  00001100  2**2
+  8 .debug_frame  00000034  00000000  00000000  00001188  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    00000369  00000000  00000000  00001134  2**0
+  9 .debug_str    00000369  00000000  00000000  000011bc  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    00000121  00000000  00000000  0000149d  2**0
+ 10 .debug_loc    0000015d  00000000  00000000  00001525  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_ranges 00000010  00000000  00000000  000015be  2**0
+ 11 .debug_ranges 00000028  00000000  00000000  00001682  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -65,8 +65,8 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	e6 ef       	ldi	r30, 0xF6	; 246
-  68:	f0 e0       	ldi	r31, 0x00	; 0
+  66:	e6 e1       	ldi	r30, 0x16	; 22
+  68:	f1 e0       	ldi	r31, 0x01	; 1
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
   6e:	0d 92       	st	X+, r0
@@ -74,7 +74,7 @@ Disassembly of section .text:
   72:	b1 07       	cpc	r27, r17
   74:	d9 f7       	brne	.-10     	; 0x6c <__do_copy_data+0xc>
   76:	0e 94 41 00 	call	0x82	; 0x82 <main>
-  7a:	0c 94 79 00 	jmp	0xf2	; 0xf2 <_exit>
+  7a:	0c 94 89 00 	jmp	0x112	; 0x112 <_exit>
 
 0000007e <__bad_interrupt>:
   7e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -115,66 +115,104 @@ int main(void)
 	DDRD = 0b11111111; // ===  DDRD = 255 this will make them all output
   ac:	8f ef       	ldi	r24, 0xFF	; 255
   ae:	81 bb       	out	0x11, r24	; 17
-  b0:	9e 01       	movw	r18, r28
-  b2:	25 5f       	subi	r18, 0xF5	; 245
-  b4:	3f 4f       	sbci	r19, 0xFF	; 255
+	
+	/* Turn on the led by writing 1 on the led to output voltage */
     while (1) 
     {
-		for (u8 i = 0; i < 10; i++)
-		{
-			/* ON states */
-			PORTA = 0b00000001;
-  b6:	91 e0       	ldi	r25, 0x01	; 1
-  b8:	fe 01       	movw	r30, r28
-  ba:	31 96       	adiw	r30, 0x01	; 1
-  bc:	9b bb       	out	0x1b, r25	; 27
-			PORTD = segment[i];
-  be:	81 91       	ld	r24, Z+
-  c0:	82 bb       	out	0x12, r24	; 18
+		/* Set all states off if input button is not clicked (0) and on if input button is clicked ... PORTA 1 to fire up internal pull up resistor */
+		PORTA = 0b11111110;
+  b0:	8e ef       	ldi	r24, 0xFE	; 254
+  b2:	ae 01       	movw	r20, r28
+  b4:	45 5f       	subi	r20, 0xF5	; 245
+  b6:	5f 4f       	sbci	r21, 0xFF	; 255
+			_delay_ms(50); // debounce
+			if ((PINA & (1 << PA1)) == 0){
+				for (u8 i = 0; i < 10; i++)
+				{
+					/* ON states */
+					PORTA = 0b11111111;
+  b8:	2f ef       	ldi	r18, 0xFF	; 255
+	
+	/* Turn on the led by writing 1 on the led to output voltage */
+    while (1) 
+    {
+		/* Set all states off if input button is not clicked (0) and on if input button is clicked ... PORTA 1 to fire up internal pull up resistor */
+		PORTA = 0b11111110;
+  ba:	8b bb       	out	0x1b, r24	; 27
+		
+		if ((PINA & 0b00000010) == 0)
+  bc:	c9 99       	sbic	0x19, 1	; 25
+  be:	fd cf       	rjmp	.-6      	; 0xba <main+0x38>
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
-  c2:	4f ef       	ldi	r20, 0xFF	; 255
-  c4:	54 e3       	ldi	r21, 0x34	; 52
-  c6:	8c e0       	ldi	r24, 0x0C	; 12
-  c8:	41 50       	subi	r20, 0x01	; 1
-  ca:	50 40       	sbci	r21, 0x00	; 0
-  cc:	80 40       	sbci	r24, 0x00	; 0
-  ce:	e1 f7       	brne	.-8      	; 0xc8 <main+0x46>
-  d0:	00 c0       	rjmp	.+0      	; 0xd2 <main+0x50>
-  d2:	00 00       	nop
-			_delay_ms(500);
-			
-			/* OFF states */
-			PORTA = 0b00000000;
-  d4:	1b ba       	out	0x1b, r1	; 27
-			PORTD = 0b00000000;
-  d6:	12 ba       	out	0x12, r1	; 18
-  d8:	4f ef       	ldi	r20, 0xFF	; 255
-  da:	54 e3       	ldi	r21, 0x34	; 52
-  dc:	8c e0       	ldi	r24, 0x0C	; 12
-  de:	41 50       	subi	r20, 0x01	; 1
-  e0:	50 40       	sbci	r21, 0x00	; 0
-  e2:	80 40       	sbci	r24, 0x00	; 0
-  e4:	e1 f7       	brne	.-8      	; 0xde <main+0x5c>
-  e6:	00 c0       	rjmp	.+0      	; 0xe8 <main+0x66>
-  e8:	00 00       	nop
-	DDRD = 0b11111111; // ===  DDRD = 255 this will make them all output
-	
-	/* Turn on the led by writing 1 on the led to output voltage */
-    while (1) 
-    {
-		for (u8 i = 0; i < 10; i++)
-  ea:	e2 17       	cp	r30, r18
-  ec:	f3 07       	cpc	r31, r19
-  ee:	31 f7       	brne	.-52     	; 0xbc <main+0x3a>
-  f0:	e3 cf       	rjmp	.-58     	; 0xb8 <main+0x36>
+  c0:	3f e7       	ldi	r19, 0x7F	; 127
+  c2:	68 e3       	ldi	r22, 0x38	; 56
+  c4:	91 e0       	ldi	r25, 0x01	; 1
+  c6:	31 50       	subi	r19, 0x01	; 1
+  c8:	60 40       	sbci	r22, 0x00	; 0
+  ca:	90 40       	sbci	r25, 0x00	; 0
+  cc:	e1 f7       	brne	.-8      	; 0xc6 <main+0x44>
+  ce:	00 c0       	rjmp	.+0      	; 0xd0 <main+0x4e>
+  d0:	00 00       	nop
+		{
+			_delay_ms(50); // debounce
+			if ((PINA & (1 << PA1)) == 0){
+  d2:	c9 99       	sbic	0x19, 1	; 25
+  d4:	f2 cf       	rjmp	.-28     	; 0xba <main+0x38>
+  d6:	fe 01       	movw	r30, r28
+  d8:	31 96       	adiw	r30, 0x01	; 1
+				for (u8 i = 0; i < 10; i++)
+				{
+					/* ON states */
+					PORTA = 0b11111111;
+  da:	2b bb       	out	0x1b, r18	; 27
+					PORTD = segment[i];
+  dc:	91 91       	ld	r25, Z+
+  de:	92 bb       	out	0x12, r25	; 18
+  e0:	3f ef       	ldi	r19, 0xFF	; 255
+  e2:	64 e3       	ldi	r22, 0x34	; 52
+  e4:	9c e0       	ldi	r25, 0x0C	; 12
+  e6:	31 50       	subi	r19, 0x01	; 1
+  e8:	60 40       	sbci	r22, 0x00	; 0
+  ea:	90 40       	sbci	r25, 0x00	; 0
+  ec:	e1 f7       	brne	.-8      	; 0xe6 <main+0x64>
+  ee:	00 c0       	rjmp	.+0      	; 0xf0 <main+0x6e>
+  f0:	00 00       	nop
+					_delay_ms(500);
+					
+					/* OFF states */
+					CLR_BIT(PORTA, PA0);
+  f2:	d8 98       	cbi	0x1b, 0	; 27
+					SET_BIT(PORTA, PA1);
+  f4:	d9 9a       	sbi	0x1b, 1	; 27
+					PORTD = 0b00000000;
+  f6:	12 ba       	out	0x12, r1	; 18
+  f8:	3f ef       	ldi	r19, 0xFF	; 255
+  fa:	64 e3       	ldi	r22, 0x34	; 52
+  fc:	9c e0       	ldi	r25, 0x0C	; 12
+  fe:	31 50       	subi	r19, 0x01	; 1
+ 100:	60 40       	sbci	r22, 0x00	; 0
+ 102:	90 40       	sbci	r25, 0x00	; 0
+ 104:	e1 f7       	brne	.-8      	; 0xfe <main+0x7c>
+ 106:	00 c0       	rjmp	.+0      	; 0x108 <main+0x86>
+ 108:	00 00       	nop
+		
+		if ((PINA & 0b00000010) == 0)
+		{
+			_delay_ms(50); // debounce
+			if ((PINA & (1 << PA1)) == 0){
+				for (u8 i = 0; i < 10; i++)
+ 10a:	e4 17       	cp	r30, r20
+ 10c:	f5 07       	cpc	r31, r21
+ 10e:	29 f7       	brne	.-54     	; 0xda <main+0x58>
+ 110:	d4 cf       	rjmp	.-88     	; 0xba <main+0x38>
 
-000000f2 <_exit>:
-  f2:	f8 94       	cli
+00000112 <_exit>:
+ 112:	f8 94       	cli
 
-000000f4 <__stop_program>:
-  f4:	ff cf       	rjmp	.-2      	; 0xf4 <__stop_program>
+00000114 <__stop_program>:
+ 114:	ff cf       	rjmp	.-2      	; 0x114 <__stop_program>
