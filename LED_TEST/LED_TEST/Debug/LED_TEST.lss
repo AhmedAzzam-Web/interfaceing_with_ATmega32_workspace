@@ -107,12 +107,12 @@ int main(void)
   a4:	8a 95       	dec	r24
   a6:	e1 f7       	brne	.-8      	; 0xa0 <main+0x1e>
 	/* Configure OUTPUT pins for the led*/
-	DDRA = 0b00000001;
+	LED_BTN_DDR = 0b00000001;
   a8:	81 e0       	ldi	r24, 0x01	; 1
   aa:	8a bb       	out	0x1a, r24	; 26
 	
 	/* Configure 7-segment display for cathode which means dot pin (pin 8) connected to ground for DDRD*/
-	DDRD = 0b11111111; // ===  DDRD = 255 this will make them all output
+	SEG_DDR = 0b11111111; // ===  DDRD = 255 this will make them all output
   ac:	8f ef       	ldi	r24, 0xFF	; 255
   ae:	81 bb       	out	0x11, r24	; 17
 	
@@ -120,13 +120,13 @@ int main(void)
     while (1) 
     {
 		/* Set all states off if input button is not clicked (0) and on if input button is clicked ... PORTA 1 to fire up internal pull up resistor */
-		PORTA = 0b11111110;
+		LED_BTN_PORT = 0b11111110;
   b0:	8e ef       	ldi	r24, 0xFE	; 254
   b2:	ae 01       	movw	r20, r28
   b4:	45 5f       	subi	r20, 0xF5	; 245
   b6:	5f 4f       	sbci	r21, 0xFF	; 255
-			_delay_ms(50); // debounce
-			if ((PINA & (1 << PA1)) == 0){
+			// Check if A1 is connected to the ground
+			if ((BTN_PINR & (1 << BTN_PIN)) == 0){
 				for (u8 i = 0; i < 10; i++)
 				{
 					/* ON states */
@@ -137,10 +137,10 @@ int main(void)
     while (1) 
     {
 		/* Set all states off if input button is not clicked (0) and on if input button is clicked ... PORTA 1 to fire up internal pull up resistor */
-		PORTA = 0b11111110;
+		LED_BTN_PORT = 0b11111110;
   ba:	8b bb       	out	0x1b, r24	; 27
 		
-		if ((PINA & 0b00000010) == 0)
+		if ((BTN_PINR & 0b00000010) == 0)
   bc:	c9 99       	sbic	0x19, 1	; 25
   be:	fd cf       	rjmp	.-6      	; 0xba <main+0x38>
 	#else
@@ -160,7 +160,8 @@ int main(void)
   d0:	00 00       	nop
 		{
 			_delay_ms(50); // debounce
-			if ((PINA & (1 << PA1)) == 0){
+			// Check if A1 is connected to the ground
+			if ((BTN_PINR & (1 << BTN_PIN)) == 0){
   d2:	c9 99       	sbic	0x19, 1	; 25
   d4:	f2 cf       	rjmp	.-28     	; 0xba <main+0x38>
   d6:	fe 01       	movw	r30, r28
@@ -170,7 +171,7 @@ int main(void)
 					/* ON states */
 					PORTA = 0b11111111;
   da:	2b bb       	out	0x1b, r18	; 27
-					PORTD = segment[i];
+					SEG_PORT = segment[i];
   dc:	91 91       	ld	r25, Z+
   de:	92 bb       	out	0x12, r25	; 18
   e0:	3f ef       	ldi	r19, 0xFF	; 255
@@ -189,7 +190,7 @@ int main(void)
   f2:	d8 98       	cbi	0x1b, 0	; 27
 					SET_BIT(PORTA, PA1);
   f4:	d9 9a       	sbi	0x1b, 1	; 27
-					PORTD = 0b00000000;
+					SEG_PORT = 0b00000000;
   f6:	12 ba       	out	0x12, r1	; 18
   f8:	3f ef       	ldi	r19, 0xFF	; 255
   fa:	64 e3       	ldi	r22, 0x34	; 52
@@ -200,11 +201,11 @@ int main(void)
  104:	e1 f7       	brne	.-8      	; 0xfe <main+0x7c>
  106:	00 c0       	rjmp	.+0      	; 0x108 <main+0x86>
  108:	00 00       	nop
-		
-		if ((PINA & 0b00000010) == 0)
+		if ((BTN_PINR & 0b00000010) == 0)
 		{
 			_delay_ms(50); // debounce
-			if ((PINA & (1 << PA1)) == 0){
+			// Check if A1 is connected to the ground
+			if ((BTN_PINR & (1 << BTN_PIN)) == 0){
 				for (u8 i = 0; i < 10; i++)
  10a:	e4 17       	cp	r30, r20
  10c:	f5 07       	cpc	r31, r21
