@@ -140,8 +140,8 @@ int main(void)
 		LED_BTN_PORT = 0b11111110;
   ba:	8b bb       	out	0x1b, r24	; 27
 		
-		if ((BTN_PINR & 0b00000010) == 0)
-  bc:	c9 99       	sbic	0x19, 1	; 25
+		if ((BTN_PINR & BTN_PIN) == 0)
+  bc:	c8 99       	sbic	0x19, 0	; 25
   be:	fd cf       	rjmp	.-6      	; 0xba <main+0x38>
 	#else
 		//round up by default
@@ -201,7 +201,7 @@ int main(void)
  104:	e1 f7       	brne	.-8      	; 0xfe <main+0x7c>
  106:	00 c0       	rjmp	.+0      	; 0x108 <main+0x86>
  108:	00 00       	nop
-		if ((BTN_PINR & 0b00000010) == 0)
+		if ((BTN_PINR & BTN_PIN) == 0)
 		{
 			_delay_ms(50); // debounce
 			// Check if A1 is connected to the ground

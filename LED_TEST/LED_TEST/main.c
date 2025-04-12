@@ -44,7 +44,7 @@ int main(void)
 		/* Set all states off if input button is not clicked (0) and on if input button is clicked ... PORTA 1 to fire up internal pull up resistor */
 		LED_BTN_PORT = 0b11111110;
 		
-		if ((BTN_PINR & 0b00000010) == 0)
+		if ((BTN_PINR & BTN_PIN) == 0)
 		{
 			_delay_ms(50); // debounce
 			// Check if A1 is connected to the ground
